@@ -178,6 +178,7 @@ function Vim:handleKeyEvent(char)
 	end
 	-- allows for visual mode too
 	local movements = {
+		D = complexKeyPressFactory({mergeArrays(keyMods, {'shift', 'cmd'}), keyMods}, {'right', 'delete'}),
 		X = keyPressFactory(keyMods, 'delete'),
 		['$'] = keyPressFactory(mergeArrays(keyMods, {'cmd'}), 'right'),
 		['0'] = keyPressFactory(mergeArrays(keyMods, {'cmd'}), 'left'),
@@ -199,6 +200,7 @@ function Vim:handleKeyEvent(char)
 	} -- keypresses for the modifiers after the movement
 
 	local numEvents = {
+		D = 2,
 		X = 1,
 		['$'] = 1,
 		['0'] = 1,

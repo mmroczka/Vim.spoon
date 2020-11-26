@@ -4,7 +4,7 @@
 
 - [x] x - delete forward
 - [x] X - delete backward
-- [ ] D - delete till end of line
+- [x] D - delete till end of line
 - [ ] dd - delete entire line
 - [ ] C - change till end of line
 - [ ] cc - change entire line
