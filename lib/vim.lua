@@ -178,42 +178,43 @@ function Vim:handleKeyEvent(char)
 	end
 	-- allows for visual mode too
 	local movements = {
-		j = keyPressFactory(keyMods, 'down'),
-		k = keyPressFactory(keyMods, 'up'),
-		h = keyPressFactory(keyMods, 'left'),
-		l = keyPressFactory(keyMods, 'right'),
-		['0'] = keyPressFactory(mergeArrays(keyMods, {'cmd'}), 'left'),
+		X = keyPressFactory(keyMods, 'delete'),
 		['$'] = keyPressFactory(mergeArrays(keyMods, {'cmd'}), 'right'),
+		['0'] = keyPressFactory(mergeArrays(keyMods, {'cmd'}), 'left'),
 		b = keyPressFactory(mergeArrays(keyMods, {'alt'}), 'left'),
 		e = keyPressFactory(mergeArrays(keyMods, {'alt'}), 'right'),
+		h = keyPressFactory(keyMods, 'left'),
+		j = keyPressFactory(keyMods, 'down'),
+		k = keyPressFactory(keyMods, 'up'),
+		l = keyPressFactory(keyMods, 'right'),
 		w = complexKeyPressFactory({mergeArrays(keyMods, {'alt'}), keyMods}, {'right', 'right'}),
 		x = keyPressFactory(keyMods, 'forwarddelete'),
-		X = keyPressFactory(keyMods, 'delete')
 	} -- movements to make
 
 	local modifierKeys = {
-		d = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'delete'}),
 		c = complexKeyPressFactory({{'cmd'}, {}, {}}, {'c', 'delete', 'i'}),
+		d = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'delete'}),
+		r = complexKeyPressFactory({{}, {}}, {'forwarddelete', char}),
 		y = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'right'}),
-		r = complexKeyPressFactory({{}, {}}, {'forwarddelete', char})
 	} -- keypresses for the modifiers after the movement
 
 	local numEvents = {
+		X = 1,
+		['$'] = 1,
+		['0'] = 1,
+		b = 1,
+		c = 2,
+		d = 2,
+		e = 1,
+		g = 2,
+		h = 1,
 		j = 1,
 		k = 1,
-		h = 1,
 		l = 1,
-		['0'] = 1,
-		['$'] = 1,
-		b = 1,
-		e = 1,
-		x = 1,
-		X = 1,
+		r = 2,
 		w = 2,
-		d = 2,
-		c = 2,
+		x = 1,
 		y = 2,
-		r = 2
 	} -- table of events the system has to let past for this
 
 	if movements[char] ~= nil and self.commandMods ~= 'r' then
