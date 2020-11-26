@@ -118,6 +118,12 @@ function Vim:setDebug(val)
 	self.debug = val
 end
 
+function Vim:showDebug(log)
+	if self.debug then
+		print(log)
+	end
+end
+
 
 function Vim:showModals(modals)
 	for i,mode in ipairs(modals) do
@@ -226,9 +232,7 @@ function Vim:handleKeyEvent(char)
 		stop_event = true
 	elseif modifiers:find(char) ~= nil and self.commandMods == nil then
 		print('======== THREE =========')
-		if self.debug then
-			print('Modifier character: ' .. char)
-		end
+		self:showDebug('Modifier character: ' .. char)
 		self.commandMods = char
 		stop_event = true
 	end
@@ -236,9 +240,10 @@ function Vim:handleKeyEvent(char)
 	if self.commandMods ~= nil and modifiers:find(self.commandMods) ~= nil then
 		-- do something related to modifiers
 		-- run this block only after movement-related code
-		print('======== FOUR =========')
+		print('======== Modifier in progress =========')
 		if modifiers:find(char) == nil then
 			self.events = self.events + numEvents[self.commandMods]
+			print(self.events)
 			modifierKeys[self.commandMods]()
 			self.commandMods = nil
 			-- reset
@@ -261,16 +266,13 @@ function Vim:eventWatcher(evt)
 	-- stop an event from propagating through the event system
 	local stop_event = true
 	local evtChar = evt:getCharacters()
-	if self.debug then
-		print('in eventWatcher: pressed ' .. evtChar)
-	end
+
+	self:showDebug('in eventWatcher: pressed ' .. evtChar)
 	local insertEvents = 'iIsaAoO'
 	local commandMods = 'rcdy'
 	-- this function mostly handles the state-dependent events
 	if self.events > 0 then
-		if self.debug then
-			print('an event is occurring ' .. self.events)
-		end
+		self:showDebug('an event is occurring ' .. self.events)
 		stop_event = false
 		self.events = self.events - 1
 	elseif evtChar == 'v' then
@@ -301,9 +303,7 @@ function Vim:eventWatcher(evt)
 		self:insert(evtChar)
 	else
 		-- anything else, literally
-		if self.debug then
-			print('handling key press event for movement')
-		end
+		self:showDebug('handling key press event for movement')
 		stop_event = self:handleKeyEvent(evtChar)
 	end
 	return stop_event
