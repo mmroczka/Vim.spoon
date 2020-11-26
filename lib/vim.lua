@@ -195,7 +195,7 @@ function Vim:handleKeyEvent(char)
 		d = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'delete'}),
 		c = complexKeyPressFactory({{'cmd'}, {}, {}}, {'c', 'delete', 'i'}),
 		y = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'right'}),
-		r = complexKeyPressFactory({{}, {}}, {'delete', char})
+		r = complexKeyPressFactory({{}, {}}, {'forwarddelete', char})
 	} -- keypresses for the modifiers after the movement
 
 	local numEvents = {

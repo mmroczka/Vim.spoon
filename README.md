@@ -38,7 +38,7 @@
 
 - [ ] yy - yank entire line
 - [ ] Y - yank from current place to end of the line
-- [ ] r - replace single character
+- [x] r - replace single character
 
 ## Other
 
