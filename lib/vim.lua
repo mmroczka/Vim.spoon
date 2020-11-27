@@ -122,6 +122,7 @@ function Vim:new()
 						keyMods = {}, -- these are like cmd, alt, shift, etc...
 						commandMods = nil, -- these are like d, y, c, r in normal mode
 						numberMods = 0, -- for # times to do an action
+						prevKey = '',
 						debug = false,
 						events = 0, -- flag for # events to let by the event mngr
 						modals = buildHUD(),
@@ -190,14 +191,13 @@ function Vim:start()
 	end
 end
 
-
- 
-function Vim:handleKeyEvent(char, mods)
+function Vim:handleKeyEvent(char, evt)
 	-- check for text modifiers
 	local modifiers = 'dcyr'
 	local stop_event = true -- stop event from propagating
 	local keyMods = self.keyMods
 	self:showDebug('\t--- handleKeyEvent -> '.. char)
+	self:showDebug('\t--- handleKeyEvent -> previous key was --> '.. self.prevKey)
 	if self.commandMods ~= nil and string.find('dcy', self.commandMods) ~= nil then
 		-- using shift to delete and select things even in visual mode
 		keyMods = mergeArrays(keyMods, {'shift'})
@@ -219,8 +219,8 @@ function Vim:handleKeyEvent(char, mods)
 	} -- movements to make
 
 	local modifierKeys = {
-		c = complexKeyPressFactory({{'cmd'}, {}, {}}, {'c', 'delete', 'i'}),
-		d = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'delete'}),
+		-- c = complexKeyPressFactory({{'cmd'}, {}, {}}, {'c', 'delete', 'i'}),
+		-- d = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'delete'}),
 		-- r = complexKeyPressFactory({{}, {}}, {'forwarddelete', char}),
 		y = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'right'}),
 	} -- keypresses for the modifiers after the movement
@@ -250,11 +250,10 @@ function Vim:handleKeyEvent(char, mods)
 		self.events = numEvents[char]
 		movements[char]() -- execute function assigned to this specific key
 		stop_event = true
-	elseif modifiers:find(char) ~= nil and self.commandMods == nil then
+	elseif modifiers:find(char) ~= nil and self.commandMods == nil then -- if a modifier was pressed then turn that modifier on
 		self:showDebug('\t--- handleKeyEvent: Modifier character: ' .. char)
 		self.commandMods = char
 		stop_event = true
-	elseif char == 'r' then
 		return stop_event
 	end
 
@@ -280,6 +279,7 @@ function Vim:handleKeyEvent(char, mods)
 		stop_event = false
 	end
 	self:showDebug("\t--- handleKeyEvent: Stop event = ".. tostring(stop_event))
+	self.prevKey = char
 	return stop_event
 end
 
@@ -289,13 +289,6 @@ function Vim:eventWatcher(evt)
 	local evtChar = evt:getCharacters()
 	local flags = evt:getFlags()
 	local character = hs.keycodes.map[evt:getKeyCode()]
-	-- print('EVT = '.. evtChar)
-	-- print('asData = '.. evt:asData())
-	-- print('getRawEventData = ') 
-	-- printTable(evt:getRawEventData())
-	-- print('Unicode = '.. evt:getUnicodeString())
-	-- print('TYPE = '.. evt:getType())
-	-- print('CHARACTER = '.. character)
 
 	self:showDebug('====== EventWatcher: pressed ' .. evtChar)
 	local insertEvents = 'iIsaAoO'
@@ -330,8 +323,16 @@ function Vim:eventWatcher(evt)
 		for i = 0,15 do
 		  keyPress({}, 'down', 0)
 		end
+	elseif evtChar == 'C' then
+		-- capital C
+		self.events = 4
+		complexKeyPressFactory({{'shift', 'cmd'}, {}}, {'right', 'delete'})()
+		local selfRef = self
+		hs.timer.delayed.new(0.01*self.events + 0.001, function ()
+			selfRef:exitModal()
+		end):start()
 	elseif character == 'u' and flags.ctrl then
-		-- scroll down
+		-- scroll up
 		self.events = 15
 		for i = 0,15 do
 		  keyPress({}, 'up', 0)
@@ -348,6 +349,14 @@ function Vim:eventWatcher(evt)
 		-- do the insert command
 		self:showDebug('insertEvent occuring')
 		self:insert(evtChar)
+	elseif self.state == 'normal' and self.commandMods == 'd' then
+		-- wait for next key to determine what to delete
+		self:showDebug('deleteEvent occuring')
+		self:delete(evtChar)
+	elseif self.state == 'normal' and self.commandMods == 'c' then
+		-- wait for next key to determine what to change
+		self:showDebug('changeEvent occuring')
+		self:change(evtChar)
 	elseif self.state == 'normal' and self.commandMods == 'r' then
 		-- do the replace command 
 		self:showDebug('replaceEvent occuring')
@@ -355,7 +364,7 @@ function Vim:eventWatcher(evt)
 	else
 		-- anything else, literally
 		self:showDebug('handling key press event for movement')
-		stop_event = self:handleKeyEvent(evtChar)
+		stop_event = self:handleKeyEvent(evtChar, evt)
 	end
 	self:showDebug('====== EventWatcher: stop_event = ' .. tostring(stop_event).."\n\n")
 	return stop_event
@@ -399,6 +408,26 @@ function Vim:replace(char, keycode)
 	end
 	local selfRef = self
 	selfRef:setMode('normal')
+end
+
+function Vim:delete(char, keycode)
+	self.events = 5
+	if char == 'd' then
+		complexKeyPressFactory({{'cmd'}, {'shift', 'cmd'}, {}, {}, {}}, {'right', 'left', 'delete', 'delete', 'down'})()
+	end
+	local selfRef = self
+	selfRef:setMode('normal')
+end
+
+function Vim:change(char, keycode)
+	self.events = 3
+	if char == 'c' then
+		complexKeyPressFactory({{'cmd'}, {'shift', 'cmd'}, {}}, {'right', 'left', 'delete'})()
+	end
+	local selfRef = self
+	hs.timer.delayed.new(0.01*self.events + 0.001, function ()
+		selfRef:exitModal()
+	end):start()
 end
 
 function Vim:exitModal()

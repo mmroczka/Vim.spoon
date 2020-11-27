@@ -5,9 +5,9 @@
 - [x] x - delete forward
 - [x] X - delete backward
 - [x] D - delete till end of line
-- [ ] dd - delete entire line
-- [ ] C - change till end of line
-- [ ] cc - change entire line
+- [x] dd - delete entire line
+- [x] C - change till end of line
+- [x] cc - change entire line
 
 ## Complex Commands
 
@@ -31,8 +31,8 @@
 - [x] e - forward to end of word
 - [ ] gg - jump to top of doc
 - [ ] G - jump to bottom of doc
-- [ ] ⌃d - scroll page _down_
-- [ ] ⌃u - scroll page _up_
+- [x] ⌃d - scroll page _down_
+- [x] ⌃u - scroll page _up_
 
 ## Misc
 
