@@ -202,7 +202,7 @@ end
 
 function Vim:handleKeyEvent(char, evt)
 	-- check for text modifiers
-	local modifiers = 'dcyr'
+	local modifiers = 'dcyrg'
 	local stop_event = true -- stop event from propagating
 	local keyMods = self.keyMods
 	self:showDebug('\t--- handleKeyEvent -> '.. char)
@@ -301,7 +301,7 @@ function Vim:eventWatcher(evt)
 
 	self:showDebug('====== EventWatcher: pressed ' .. evtChar)
 	local insertEvents = 'iIsaAoO'
-	local commandMods = 'rcdy'
+	local commandMods = 'rcdyg'
 	-- this function mostly handles the state-dependent events
 	if self.events > 0 then
 		self:showDebug('====== EventWatcher: event '.. self.events .. ' is occurring ')
@@ -358,6 +358,10 @@ function Vim:eventWatcher(evt)
 		-- do the insert command
 		self:showDebug('insertEvent occuring')
 		self:insert(evtChar)
+	elseif (self.state == 'normal' or self.state == 'visual') and self.commandMods == 'g' then
+		-- wait for next key to determine where to Go
+		self:showDebug('GOTO event is occuring')
+		self:goTo(evtChar)
 	elseif self.state == 'normal' and self.commandMods == 'd' then
 		-- wait for next key to determine what to delete
 		self:showDebug('deleteEvent occuring')
@@ -437,6 +441,18 @@ function Vim:change(char, keycode)
 	hs.timer.delayed.new(0.01*self.events + 0.001, function ()
 		selfRef:exitModal()
 	end):start()
+end
+
+function Vim:goTo(char, keycode)
+	self.events = 1
+	if char == 'g' then
+		keyPress({'cmd'}, 'up')
+	end
+	if char == 'G' then
+		keyPress({'cmd'}, 'down')
+	end
+	local selfRef = self
+	selfRef:setMode('normal')
 end
 
 function Vim:exitModal()

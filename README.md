@@ -29,8 +29,8 @@
 - [x] I - jump to beginning of line and go into insert mode
 - [x] b - back by word
 - [x] e - forward to end of word
-- [ ] gg - jump to top of doc
-- [ ] G - jump to bottom of doc
+- [x] gg - jump to top of doc
+- [x] G - jump to bottom of doc
 - [x] ⌃d - scroll page _down_
 - [x] ⌃u - scroll page _up_
 
@@ -43,4 +43,4 @@
 ## Other
 
 - [ ] Add Navigation HUD option for Navigation mode
-- [ ] Add HUD on second monitor in addition to first monitor
+- [x] Add HUD on second monitor in addition to first monitor
