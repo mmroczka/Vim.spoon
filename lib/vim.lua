@@ -298,6 +298,7 @@ function Vim:eventWatcher(evt)
 	local evtChar = evt:getCharacters()
 	local flags = evt:getFlags()
 	local character = hs.keycodes.map[evt:getKeyCode()]
+	local keyMods = self.keyMods
 
 	self:showDebug('====== EventWatcher: pressed ' .. evtChar)
 	local insertEvents = 'iIsaAoO'
@@ -326,12 +327,6 @@ function Vim:eventWatcher(evt)
 		-- special redo key
 		self.events = 1
 		keyPress({'shift','cmd'}, 'z')
-	elseif character == 'd' and flags.ctrl then
-		-- scroll down
-		self.events = 15
-		for i = 0,15 do
-		  keyPress({}, 'down', 0)
-		end
 	elseif evtChar == 'C' then
 		-- capital C
 		self.events = 4
@@ -340,15 +335,29 @@ function Vim:eventWatcher(evt)
 		hs.timer.delayed.new(0.01*self.events + 0.001, function ()
 			selfRef:exitModal()
 		end):start()
+	elseif character == 'd' and flags.ctrl then
+		-- scroll down
+		self.events = 15
+		for i = 0,15 do
+		  keyPress(keyMods, 'down', 0)
+		end
 	elseif character == 'u' and flags.ctrl then
 		-- scroll up
 		self.events = 15
 		for i = 0,15 do
-		  keyPress({}, 'up', 0)
+		  keyPress(keyMods, 'up', 0)
 		end
 	elseif evtChar == 'p' then
 		self.events = 1
 		keyPress({'cmd'}, 'v')
+		self:setMode('normal')
+	elseif evtChar == 'x' then
+		self.events = 1
+		keyPress(keyMods, 'forwarddelete')
+		self:setMode('normal')
+	elseif evtChar == 'X' then
+		self.events = 1
+		keyPress(keyMods, 'delete')
 		self:setMode('normal')
 	elseif evtChar == '/' then
 		self.events = 1
