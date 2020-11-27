@@ -192,7 +192,7 @@ end
 
 
  
-function Vim:handleKeyEvent(char)
+function Vim:handleKeyEvent(char, mods)
 	-- check for text modifiers
 	local modifiers = 'dcyr'
 	local stop_event = true -- stop event from propagating
@@ -225,7 +225,7 @@ function Vim:handleKeyEvent(char)
 		y = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'right'}),
 	} -- keypresses for the modifiers after the movement
 
-	local numEvents = {
+	local numEvents = { 
 		D = 2,
 		X = 1,
 		['$'] = 1,
@@ -324,6 +324,18 @@ function Vim:eventWatcher(evt)
 		-- special redo key
 		self.events = 1
 		keyPress({'shift','cmd'}, 'z')
+	elseif character == 'd' and flags.ctrl then
+		-- scroll down
+		self.events = 15
+		for i = 0,15 do
+		  keyPress({}, 'down', 0)
+		end
+	elseif character == 'u' and flags.ctrl then
+		-- scroll down
+		self.events = 15
+		for i = 0,15 do
+		  keyPress({}, 'up', 0)
+		end
 	elseif evtChar == 'p' then
 		self.events = 1
 		keyPress({'cmd'}, 'v')
