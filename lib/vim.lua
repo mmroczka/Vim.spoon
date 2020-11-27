@@ -351,6 +351,12 @@ function Vim:eventWatcher(evt)
 		self.events = 1
 		keyPress({'cmd'}, 'v')
 		self:setMode('normal')
+	elseif evtChar == 'P' then
+		self.events = 3
+		keyPress({'cmd'}, 'right')
+		keyPress({}, 'return')
+		keyPress({'cmd'}, 'v')
+		self:setMode('normal')
 	elseif evtChar == 'x' then
 		self.events = 1
 		keyPress(keyMods, 'forwarddelete')
@@ -374,6 +380,11 @@ function Vim:eventWatcher(evt)
 		else
 			keyPress({'cmd', 'shift'}, 'down')
 		end
+	elseif evtChar == 'Y' then
+		self.events = 3
+		keyPress({'cmd', 'shift'}, 'right')
+		keyPress({'cmd'}, 'c')
+		keyPress({}, 'left')
 	elseif (self.state == 'normal' or self.state == 'visual') and self.commandMods == 'g' then
 		-- wait for next key to determine where to Go
 		self:showDebug('GOTO event is occuring')
