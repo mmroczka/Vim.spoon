@@ -79,8 +79,8 @@ function delayedKeyPress(mod, char, delay)
 end
 
 function keyPress(mod, char)
-	-- press a key for 20ms
-	hs.eventtap.keyStroke(mod, char, 10000)
+	-- press a key for 1ms
+	hs.eventtap.keyStroke(mod, char, 100)
 end
 
 function keyPressFactory(mod, char)
