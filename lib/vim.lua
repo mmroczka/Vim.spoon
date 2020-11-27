@@ -170,7 +170,6 @@ function Vim:start()
 		selfPointer.tapWatcher:stop()
 		selfPointer:resetEvents()
 	end
-
 end
 
 function Vim:handleKeyEvent(char)
@@ -178,6 +177,7 @@ function Vim:handleKeyEvent(char)
 	local modifiers = 'dcyr'
 	local stop_event = true -- stop event from propagating
 	local keyMods = self.keyMods
+	self:showDebug('\t--- handleKeyEvent -> '.. char)
 	if self.commandMods ~= nil and string.find('dcy', self.commandMods) ~= nil then
 		-- using shift to delete and select things even in visual mode
 		keyMods = mergeArrays(keyMods, {'shift'})
@@ -201,7 +201,7 @@ function Vim:handleKeyEvent(char)
 	local modifierKeys = {
 		c = complexKeyPressFactory({{'cmd'}, {}, {}}, {'c', 'delete', 'i'}),
 		d = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'delete'}),
-		r = complexKeyPressFactory({{}, {}}, {'forwarddelete', char}),
+		-- r = complexKeyPressFactory({{}, {}}, {'forwarddelete', char}),
 		y = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'right'}),
 	} -- keypresses for the modifiers after the movement
 
@@ -231,19 +231,19 @@ function Vim:handleKeyEvent(char)
 		movements[char]() -- execute function assigned to this specific key
 		stop_event = true
 	elseif modifiers:find(char) ~= nil and self.commandMods == nil then
-		print('======== THREE =========')
-		self:showDebug('Modifier character: ' .. char)
+		self:showDebug('\t--- handleKeyEvent: Modifier character: ' .. char)
 		self.commandMods = char
 		stop_event = true
+	elseif char == 'r' then
+		return stop_event
 	end
 
 	if self.commandMods ~= nil and modifiers:find(self.commandMods) ~= nil then
 		-- do something related to modifiers
 		-- run this block only after movement-related code
-		print('======== Modifier in progress =========')
+		self:showDebug('\t--- handleKeyEvent: Modifier in progress') 
 		if modifiers:find(char) == nil then
 			self.events = self.events + numEvents[self.commandMods]
-			print(self.events)
 			modifierKeys[self.commandMods]()
 			self.commandMods = nil
 			-- reset
@@ -259,6 +259,7 @@ function Vim:handleKeyEvent(char)
 	if self.state == 'insert' then
 		stop_event = false
 	end
+	self:showDebug("\t--- handleKeyEvent: Stop event = ".. tostring(stop_event))
 	return stop_event
 end
 
@@ -267,12 +268,12 @@ function Vim:eventWatcher(evt)
 	local stop_event = true
 	local evtChar = evt:getCharacters()
 
-	self:showDebug('in eventWatcher: pressed ' .. evtChar)
+	self:showDebug('====== EventWatcher: pressed ' .. evtChar)
 	local insertEvents = 'iIsaAoO'
 	local commandMods = 'rcdy'
 	-- this function mostly handles the state-dependent events
 	if self.events > 0 then
-		self:showDebug('an event is occurring ' .. self.events)
+		self:showDebug('====== EventWatcher: event '.. self.events .. ' is occurring ')
 		stop_event = false
 		self.events = self.events - 1
 	elseif evtChar == 'v' then
@@ -299,13 +300,19 @@ function Vim:eventWatcher(evt)
 		keyPress({'cmd'}, 'f')
 		keyPress({}, 'i')
 	elseif insertEvents:find(evtChar, 1, true) ~= nil and self.state == 'normal' and self.commandMods == nil then
-		-- do the insert
+		-- do the insert command
+		self:showDebug('insertEvent occuring')
 		self:insert(evtChar)
+	elseif self.state == 'normal' and self.commandMods == 'r' then
+		-- do the replace command 
+		self:showDebug('replaceEvent occuring')
+		self:replace(evtChar, evt:getKeyCode())
 	else
 		-- anything else, literally
 		self:showDebug('handling key press event for movement')
 		stop_event = self:handleKeyEvent(evtChar)
 	end
+	self:showDebug('====== EventWatcher: stop_event = ' .. tostring(stop_event).."\n\n")
 	return stop_event
 end
 
@@ -334,6 +341,19 @@ function Vim:insert(char)
 	hs.timer.delayed.new(0.01*self.events + 0.001, function ()
 		selfRef:exitModal()
 	end):start()
+end
+
+function Vim:replace(char, keycode)
+	self.events = 3
+	if keycode == hs.keycodes.map['space'] then
+		self.events = 2
+		keyPress({}, 'forwarddelete')
+		keyPress({}, 'space')
+	else
+		complexKeyPressFactory({{'cmd'}, {}, {}}, {'c', 'forwarddelete', char})()
+	end
+	local selfRef = self
+	selfRef:setMode('normal')
 end
 
 function Vim:exitModal()
