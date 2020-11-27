@@ -9,16 +9,16 @@ function getTotalScreenNum()
 	return numScreens
 end
 
-function createNormalHUD()
-  return c.new{x=1155, y=0,h=22, w=100}:appendElements({ action = "fill", fillColor = { red=.125, green=.464, blue=.968 }, type = "rectangle" }, { action = "clip", type="text", text="NORMAL", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
+function createNormalHUD(x, y)
+  return c.new{x=x, y=y,h=22, w=100}:appendElements({ action = "fill", fillColor = { red=.125, green=.464, blue=.968 }, type = "rectangle" }, { action = "clip", type="text", text="NORMAL", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
 end
 
-function createInsertHUD()
-  return c.new{x=1155,y=0,h=22,w=100}:appendElements( { action = "fill", fillColor = { red=.40, green=.518, blue=.145 }, type = "rectangle"}, { action = "clip", type="text", text="INSERT", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
+function createInsertHUD(x, y)
+  return c.new{x=x,y=y,h=22,w=100}:appendElements( { action = "fill", fillColor = { red=.40, green=.518, blue=.145 }, type = "rectangle"}, { action = "clip", type="text", text="INSERT", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
 end
 
-function createVisualHUD()
-  return c.new{x=1155,y=0,h=22,w=100}:appendElements( { action = "fill", fillColor = { red=.651, green=.188, blue=.369 }, type = "rectangle"}, { action = "clip", type="text", text="VISUAL", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
+function createVisualHUD(x, y)
+  return c.new{x=x,y=y,h=22,w=100}:appendElements( { action = "fill", fillColor = { red=.651, green=.188, blue=.369 }, type = "rectangle"}, { action = "clip", type="text", text="VISUAL", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
 end
 
 function buildHUD()
@@ -30,9 +30,11 @@ function buildHUD()
 	}
 	local numOfEachHUDTOMake = getTotalScreenNum()
 	-- build MODES
-	table.insert(MODES.normals, { createNormalHUD(), createNormalHUD() });
-	table.insert(MODES.inserts, { createInsertHUD(), createInsertHUD() });
-	table.insert(MODES.visuals, { createVisualHUD(), createVisualHUD() });
+	-- table.insert(MODES.normals, createNormalHUD());
+	-- table.insert(MODES.normals, createNormalHUDForSecondMonitor());
+	table.insert(MODES.normals, { createNormalHUD(1155, 0), createNormalHUD(-1555, 0) });
+	table.insert(MODES.inserts, { createInsertHUD(1155, 0), createInsertHUD(-1555, 0) });
+	table.insert(MODES.visuals, { createVisualHUD(1155, 0), createVisualHUD(-1555, 0) });
 
 	return MODES
 end
@@ -145,21 +147,28 @@ end
 
 
 function Vim:showModals(modals)
-	for i,mode in ipairs(modals) do
-		mode[i]:show()
+	for i,data in pairs(modals) do
+		for key, value in ipairs(data) do
+			value:show()
+		end
 	end
 end
 
 function Vim:hideModals(modalGroupOne, modalGroupTwo)
-	for i,mode in ipairs(modalGroupOne) do
-		mode[i]:hide()
+	for i,data in pairs(modalGroupOne) do
+		for key, value in ipairs(data) do
+			value:hide()
+		end
 	end
-	for i,mode in ipairs(modalGroupTwo) do
-		mode[i]:hide()
+	for i,data in pairs(modalGroupTwo) do
+		for key, value in ipairs(data) do
+			value:hide()
+		end
 	end
 end
 
 function Vim:setModal(mode)
+	self:showModals(self.modals.normals)
 	if mode == "normal" then
 		self:showModals(self.modals.normals)
 		self:hideModals(self.modals.inserts, self.modals.visuals)
