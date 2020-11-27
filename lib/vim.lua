@@ -358,6 +358,13 @@ function Vim:eventWatcher(evt)
 		-- do the insert command
 		self:showDebug('insertEvent occuring')
 		self:insert(evtChar)
+	elseif evtChar == 'G' then
+		self.events = 1
+		if self.state == 'normal' then
+			keyPress({'cmd'}, 'down')
+		else
+			keyPress({'cmd', 'shift'}, 'down')
+		end
 	elseif (self.state == 'normal' or self.state == 'visual') and self.commandMods == 'g' then
 		-- wait for next key to determine where to Go
 		self:showDebug('GOTO event is occuring')
@@ -446,10 +453,11 @@ end
 function Vim:goTo(char, keycode)
 	self.events = 1
 	if char == 'g' then
-		keyPress({'cmd'}, 'up')
-	end
-	if char == 'G' then
-		keyPress({'cmd'}, 'down')
+		if self.state == 'normal' then 
+			keyPress({'cmd'}, 'up')
+		else
+			keyPress({'cmd', 'shift'}, 'up')
+		end
 	end
 	local selfRef = self
 	selfRef:setMode('normal')
