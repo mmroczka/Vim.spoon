@@ -431,10 +431,26 @@ function Vim:replace(char, keycode)
 end
 
 function Vim:delete(char, keycode)
-	self.events = 5
-	if char == 'd' then
-		complexKeyPressFactory({{'cmd'}, {'shift', 'cmd'}, {}, {}, {}}, {'right', 'left', 'delete', 'delete', 'down'})()
+	self.events = 1
+	local keyMods = self.keyMods
+	if self.commandMods ~= nil and string.find('dcy', self.commandMods) ~= nil then
+		-- using shift to delete and select things even in visual mode
+		keyMods = mergeArrays(keyMods, {'shift'})
 	end
+	if char == 'd' then
+		self.events = 5
+		complexKeyPressFactory({{'cmd'}, {'shift', 'cmd'}, {}, {}, {}}, {'right', 'left', 'delete', 'delete', 'down'})()
+	elseif char == 'w' then
+		self.events = 3
+		complexKeyPressFactory({mergeArrays(keyMods, {'alt'}), keyMods, keyMods}, {'right', 'right', 'delete'})()
+	elseif char == 'e' then
+		self.events = 2
+		complexKeyPressFactory({mergeArrays(keyMods, {'alt'}), keyMods}, {'right', 'delete'})()
+	elseif char == 'b' then
+		self.events = 2
+		complexKeyPressFactory({mergeArrays(keyMods, {'alt'}), keyMods}, {'left', 'delete'})()
+	end
+
 	local selfRef = self
 	selfRef:setMode('normal')
 end
