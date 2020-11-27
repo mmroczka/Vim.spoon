@@ -97,6 +97,24 @@ function complexKeyPressFactory(mods, keys)
 	end
 end
 
+function printTable(table)
+	print('\t------------  TABLE   --------------')
+	for index, data in ipairs(table) do
+		print('\t------------> '.. index .. '  =  ' .. data)
+	end
+	print('\t------------ END TABLE --------------')
+end
+
+function printTableAndData(table)
+	print('\t------------  TABLE   --------------')
+	for index, data in ipairs(table) do
+		for key, value in pairs(data) do
+			print('\t', key, value)
+		end
+	end
+	print('\t------------ END TABLE --------------')
+end
+
 local Vim = {}
 
 function Vim:new()
@@ -172,6 +190,8 @@ function Vim:start()
 	end
 end
 
+
+ 
 function Vim:handleKeyEvent(char)
 	-- check for text modifiers
 	local modifiers = 'dcyr'
@@ -267,6 +287,15 @@ function Vim:eventWatcher(evt)
 	-- stop an event from propagating through the event system
 	local stop_event = true
 	local evtChar = evt:getCharacters()
+	local flags = evt:getFlags()
+	local character = hs.keycodes.map[evt:getKeyCode()]
+	-- print('EVT = '.. evtChar)
+	-- print('asData = '.. evt:asData())
+	-- print('getRawEventData = ') 
+	-- printTable(evt:getRawEventData())
+	-- print('Unicode = '.. evt:getUnicodeString())
+	-- print('TYPE = '.. evt:getType())
+	-- print('CHARACTER = '.. character)
 
 	self:showDebug('====== EventWatcher: pressed ' .. evtChar)
 	local insertEvents = 'iIsaAoO'
@@ -291,6 +320,10 @@ function Vim:eventWatcher(evt)
 		-- special undo key
 		self.events = 1
 		keyPress({'cmd'}, 'z')
+	elseif character == 'r' and flags.ctrl then
+		-- special redo key
+		self.events = 1
+		keyPress({'shift','cmd'}, 'z')
 	elseif evtChar == 'p' then
 		self.events = 1
 		keyPress({'cmd'}, 'v')
