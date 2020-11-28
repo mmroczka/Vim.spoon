@@ -385,6 +385,10 @@ function Vim:eventWatcher(evt)
 		keyPress({'cmd', 'shift'}, 'right')
 		keyPress({'cmd'}, 'c')
 		keyPress({}, 'left')
+	elseif self.state == 'normal' and self.commandMods == 'y' then
+		-- wait for next key to determine what to yank
+		self:showDebug('yankEvent is occuring')
+		self:yank(evtChar)
 	elseif (self.state == 'normal' or self.state == 'visual') and self.commandMods == 'g' then
 		-- wait for next key to determine where to Go
 		self:showDebug('GOTO event is occuring')
@@ -494,6 +498,18 @@ function Vim:goTo(char, keycode)
 		else
 			keyPress({'cmd', 'shift'}, 'up')
 		end
+	end
+	local selfRef = self
+	selfRef:setMode('normal')
+end
+
+function Vim:yank(char)
+	self.events = 4
+	if char == 'y' then
+		keyPress({'cmd'}, 'left')
+		keyPress({'cmd', 'shift'}, 'right')
+		keyPress({'cmd'}, 'c')
+		keyPress({}, 'left')
 	end
 	local selfRef = self
 	selfRef:setMode('normal')
