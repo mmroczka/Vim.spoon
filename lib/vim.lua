@@ -1,5 +1,4 @@
 local c = require("hs.canvas")
--- local AppWatcher = dofile(vimModeScriptPath .. "lib/app_watcher.lua")
 
 function getTotalScreenNum()
 	local numScreens = 0
@@ -139,7 +138,6 @@ function Vim:new()
 				debug = true,
 				events = 0, -- flag for # events to let by the event mngr
 				modals = buildHUD(),
-				-- appWatcher = AppWatcher:new(vim):start()
 			}
 
 	self.__index = self
@@ -166,7 +164,6 @@ function Vim:showModals(modals)
 end
 
 function Vim:hideModals(modalGroupsToHide)
-
 	for key,group in ipairs(modalGroupsToHide) do
 		for i,data in pairs(group) do
 			for key, value in ipairs(data) do
@@ -174,12 +171,9 @@ function Vim:hideModals(modalGroupsToHide)
 			end
 		end
 	end
-	
 end
 
 function Vim:setModal(mode)
-	self:showModals(self.modals.normals)
-
 	if mode == "normal" then
 		self:showModals(self.modals.normals)
 		self:hideModals({self.modals.inserts, self.modals.visuals, self.modals.navigations, self.modals.visualblocks})
@@ -222,19 +216,7 @@ function Vim:start()
 		self:showDebug('Previous key -> ' .. self.prevKey)
 	end)
 
-	
-
 	selfPointer:setMode('insert')
-	-- function self.modal:entered()
-	-- 	-- reset to the normal mode
-	-- 	-- selfPointer.tapWatcher:start()
-	-- 	selfPointer:setMode('normal')
-	-- end
-	-- function self.modal:exited()
-	-- 	selfPointer:setMode('insert')
-	-- 	-- selfPointer.tapWatcher:stop()
-	-- 	-- selfPointer:resetEvents()
-	-- end
 end
 
 
