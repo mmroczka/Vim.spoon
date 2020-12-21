@@ -21,20 +21,30 @@ function createVisualHUD(x, y)
   return c.new{x=x,y=y,h=22,w=100}:appendElements( { action = "fill", fillColor = { red=.651, green=.188, blue=.369 }, type = "rectangle"}, { action = "clip", type="text", text="VISUAL", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
 end
 
+function createVisualBlockHUD(x, y)
+  return c.new{x=x,y=y,h=22,w=100}:appendElements( { action = "fill", fillColor = { red=.651, green=.188, blue=.369 }, type = "rectangle"}, { action = "clip", type="text", text="V-BLOCK", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
+end
+
+function createNavigationHUD(x, y)
+  return c.new{x=x,y=y,h=22,w=100}:appendElements( { action = "fill", fillColor = { red=.951, green=.188, blue=.369 }, type = "rectangle"}, { action = "clip", type="text", text="NAVIGATION", textSize=15, textAlignment="center", frame = { h = 22, w = 100, x = 0, y = 1 } })
+end
+
 function buildHUD()
 	local MODES = {
 		lastMode = "NORMAL",
 		normals = {},
 		inserts = {},
-		visuals = {}
+		visuals = {},
+		visualblocks = {},
+		navigations = {}
 	}
 	local numOfEachHUDTOMake = getTotalScreenNum()
 	-- build MODES
-	-- table.insert(MODES.normals, createNormalHUD());
-	-- table.insert(MODES.normals, createNormalHUDForSecondMonitor());
 	table.insert(MODES.normals, { createNormalHUD(1155, 0), createNormalHUD(-1555, 0) });
 	table.insert(MODES.inserts, { createInsertHUD(1155, 0), createInsertHUD(-1555, 0) });
 	table.insert(MODES.visuals, { createVisualHUD(1155, 0), createVisualHUD(-1555, 0) });
+	table.insert(MODES.visualblocks, { createVisualBlockHUD(1155, 0), createVisualBlockHUD(-1555, 0) });
+	table.insert(MODES.navigations, { createNavigationHUD(1155, 0), createNavigationHUD(-1555, 0) });
 
 	return MODES
 end
@@ -120,16 +130,17 @@ end
 local Vim = {}
 
 function Vim:new()
-	newObj = {state = 'normal',
-						keyMods = {}, -- these are like cmd, alt, shift, etc...
-						commandMods = nil, -- these are like d, y, c, r in normal mode
-						numberMods = 0, -- for # times to do an action
-						prevKey = '',
-						debug = false,
-						events = 0, -- flag for # events to let by the event mngr
-						modals = buildHUD(),
-						-- appWatcher = AppWatcher:new(vim):start()
-					}
+	newObj = {
+				state = 'normal',
+				keyMods = {}, -- these are like cmd, alt, shift, etc...
+				commandMods = nil, -- these are like d, y, c, r in normal mode
+				numberMods = 0, -- for # times to do an action
+				prevKey = '7',
+				debug = true,
+				events = 0, -- flag for # events to let by the event mngr
+				modals = buildHUD(),
+				-- appWatcher = AppWatcher:new(vim):start()
+			}
 
 	self.__index = self
 	return setmetatable(newObj, self)
@@ -154,51 +165,79 @@ function Vim:showModals(modals)
 	end
 end
 
-function Vim:hideModals(modalGroupOne, modalGroupTwo)
-	for i,data in pairs(modalGroupOne) do
-		for key, value in ipairs(data) do
-			value:hide()
+function Vim:hideModals(modalGroupsToHide)
+
+	for key,group in ipairs(modalGroupsToHide) do
+		for i,data in pairs(group) do
+			for key, value in ipairs(data) do
+				value:hide()
+			end
 		end
 	end
-	for i,data in pairs(modalGroupTwo) do
-		for key, value in ipairs(data) do
-			value:hide()
-		end
-	end
+	
 end
 
 function Vim:setModal(mode)
 	self:showModals(self.modals.normals)
+
 	if mode == "normal" then
 		self:showModals(self.modals.normals)
-		self:hideModals(self.modals.inserts, self.modals.visuals)
+		self:hideModals({self.modals.inserts, self.modals.visuals, self.modals.navigations, self.modals.visualblocks})
 	elseif mode == "insert" then
 		self:showModals(self.modals.inserts)
-		self:hideModals(self.modals.normals, self.modals.visuals)
+		self:hideModals({self.modals.normals, self.modals.visuals, self.modals.navigations, self.modals.visualblocks})
 	elseif mode == "visual" then
 		self:showModals(self.modals.visuals)
-		self:hideModals(self.modals.normals, self.modals.inserts)
+		self:hideModals({self.modals.normals, self.modals.inserts, self.modals.navigations, self.modals.visualblocks})
+	elseif mode == "visualblock" then
+		self:showModals(self.modals.visualblocks)
+		self:hideModals({self.modals.normals, self.modals.inserts, self.modals.visuals, self.modals.navigations})
+	elseif mode == "navigation" then
+		self:showModals(self.modals.navigations)
+		self:hideModals({self.modals.normals, self.modals.inserts, self.modals.visuals, self.modals.visualblocks})
 	end
 end
 
 function Vim:start()
 	local selfPointer = self
-	self.tapWatcher = hs.eventtap.new({hs.eventtap.event.types.keyDown}, function(evt)
-		return self:eventWatcher(evt)
-	end)
-	self.modal = hs.hotkey.modal.new({}, "f13")
-	selfPointer:setMode('insert')
-	function self.modal:entered()
-		-- reset to the normal mode
-		selfPointer.tapWatcher:start()
+	
+	self.modal = hs.urlevent.bind("enterVimSpoon", function(eventName, params)
 		selfPointer:setMode('normal')
-	end
-	function self.modal:exited()
+	end)
+	
+	self.modal = hs.urlevent.bind("enterNavigationMode", function(eventName, params)
+		selfPointer:setMode('navigation')
+	end)
+
+	self.modal = hs.urlevent.bind("enterVimSpoonVisualMode", function(eventName, params)
+		selfPointer:setMode('visual')
+	end)
+	
+	self.modal = hs.urlevent.bind("enterVimSpoonVisualBlockMode", function(eventName, params)
+		selfPointer:setMode('visualblock')
+	end)
+
+	self.modal = hs.urlevent.bind("exitVimSpoon", function(eventName, params)
 		selfPointer:setMode('insert')
-		selfPointer.tapWatcher:stop()
-		selfPointer:resetEvents()
-	end
+		self:showDebug('Previous key -> ' .. self.prevKey)
+	end)
+
+	
+
+	selfPointer:setMode('insert')
+	-- function self.modal:entered()
+	-- 	-- reset to the normal mode
+	-- 	-- selfPointer.tapWatcher:start()
+	-- 	selfPointer:setMode('normal')
+	-- end
+	-- function self.modal:exited()
+	-- 	selfPointer:setMode('insert')
+	-- 	-- selfPointer.tapWatcher:stop()
+	-- 	-- selfPointer:resetEvents()
+	-- end
 end
+
+
 
 function Vim:handleKeyEvent(char, evt)
 	-- check for text modifiers
@@ -532,12 +571,20 @@ function Vim:setMode(val)
 		self.numberMods = 0
 		self.moving = false
 		self:setModal("visual")
+	elseif val == 'visualblock' then
+		self.keyMods = {'shift'}
+		self.commandMods = nil
+		self.numberMods = 0
+		self.moving = false
+		self:setModal("visualblock")
 	elseif val == 'normal' then
 		self.keyMods = {}
 		self.commandMods = nil
 		self.numberMods = 0
 		self.moving = false
 		self:setModal("normal")
+	elseif val == 'navigation' then
+		self:setModal("navigation")
 	elseif val == 'ex' then
 		-- do nothing because this is not implemented
 	elseif val == 'insert' then
