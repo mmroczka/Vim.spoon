@@ -194,11 +194,11 @@ end
 
 function Vim:start()
 	local selfPointer = self
-	
+
 	self.modal = hs.urlevent.bind("enterVimSpoon", function(eventName, params)
 		selfPointer:setMode('normal')
 	end)
-	
+
 	self.modal = hs.urlevent.bind("enterNavigationMode", function(eventName, params)
 		selfPointer:setMode('navigation')
 	end)
@@ -206,12 +206,12 @@ function Vim:start()
 	self.modal = hs.urlevent.bind("enterVimSpoonVisualMode", function(eventName, params)
 		selfPointer:setMode('visual')
 	end)
-	
+
 	self.modal = hs.urlevent.bind("enterVimSpoonVisualBlockMode", function(eventName, params)
 		selfPointer:setMode('visualblock')
 	end)
 
-	self.modal = hs.urlevent.bind("exitVimSpoon", function(eventName, params)
+	self.modal = hs.urlevent.bind("enterVimSpoonInsertMode", function(eventName, params)
 		selfPointer:setMode('insert')
 		self:showDebug('Previous key -> ' .. self.prevKey)
 	end)
@@ -255,7 +255,7 @@ function Vim:handleKeyEvent(char, evt)
 		y = complexKeyPressFactory({{'cmd'}, {}}, {'c', 'right'}),
 	} -- keypresses for the modifiers after the movement
 
-	local numEvents = { 
+	local numEvents = {
 		D = 2,
 		X = 1,
 		['$'] = 1,
@@ -290,7 +290,7 @@ function Vim:handleKeyEvent(char, evt)
 	if self.commandMods ~= nil and modifiers:find(self.commandMods) ~= nil then
 		-- do something related to modifiers
 		-- run this block only after movement-related code
-		self:showDebug('\t--- handleKeyEvent: Modifier in progress') 
+		self:showDebug('\t--- handleKeyEvent: Modifier in progress')
 		if modifiers:find(char) == nil then
 			self.events = self.events + numEvents[self.commandMods]
 			modifierKeys[self.commandMods]()
@@ -423,7 +423,7 @@ function Vim:eventWatcher(evt)
 		self:showDebug('changeEvent occuring')
 		self:change(evtChar)
 	elseif self.state == 'normal' and self.commandMods == 'r' then
-		-- do the replace command 
+		-- do the replace command
 		self:showDebug('replaceEvent occuring')
 		self:replace(evtChar, evt:getKeyCode())
 	else
@@ -514,7 +514,7 @@ end
 function Vim:goTo(char, keycode)
 	self.events = 1
 	if char == 'g' then
-		if self.state == 'normal' then 
+		if self.state == 'normal' then
 			keyPress({'cmd'}, 'up')
 		else
 			keyPress({'cmd', 'shift'}, 'up')
